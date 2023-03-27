@@ -4,4 +4,4 @@ The repository contains the implementation of cost-constrained multi-label featu
 
 **How to use?**
 
-Just follow the instructions in the script `experiment.R` which You can find in the root directory of this repository.
+Just follow the instructions in the script `experiments.Rmd` which You can find in the root directory of this repository.

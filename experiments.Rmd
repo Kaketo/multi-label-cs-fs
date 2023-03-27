@@ -1,0 +1,84 @@
+---
+title: "experiments"
+output: html_notebook
+---
+
+Load all necessary user-defined functions
+
+```{r echo = T, results = 'hide'}
+source("./src/utils.R")
+source("./src/selectors.R")
+```
+
+Load all external libraries.
+```{r echo = T, results = 'hide'}
+library(jsonlite)
+library(progress)
+library(lubridate)
+library(utiml)
+library(dplyr)
+library(hash)
+library(log4r)
+library(mldr.datasets)
+```
+
+```{r}
+SEED = 0
+BUDGET = 20
+```
+
+
+```{r}
+data = flags$dataset
+X_all = data %>% select(1:19) %>% mutate_if(is.character, as.factor)
+Y_all = data %>% select(20:26) %>% mutate_if(is.character, as.factor)
+
+data_splited = train_test_split(X_all, Y_all, test_size = 0.1, seed=SEED)
+X_train = data_splited$X_train
+Y_train = data_splited$Y_train
+X_test = data_splited$X_test
+Y_test = data_splited$Y_test
+
+costs = c(
+  1,1,1,
+  2,2,2,
+  3,3,3,
+  4,4,4,
+  5,5,5,
+  6,6,6,
+  7
+)
+```
+
+```{r}
+costs
+```
+
+```{r}
+target_idx <- ncol(X_train) + seq(1, ncol(Y_train))
+mldr_dataset_train <- mldr_from_dataframe(cbind(X_train, Y_train), target_idx)
+mldr_dataset_test <- mldr_from_dataframe(cbind(X_test, Y_test), target_idx)
+```
+
+```{r}
+results_df <- data.frame(matrix(ncol = 29, nrow = 0))
+colnames(results_df) <- c(
+  "criterion", "lambda", "cost", "budget", 
+  "accuracy", "average.precision", "clp", "coverage", "F1", 
+  "hamming.loss", "macro.AUC", "macro.F1", "macro.precision", "macro.recall", 
+  "margin.loss", "micro.AUC", "micro.F1", "micro.precision", "micro.recall", "mlp", 
+  "one.error", "precision", "ranking.loss", "recall", "subset.accuracy", "wlp", "selection_type", 
+  "budget_pct", "k"
+)
+```
+
+```{r}
+results <- score_final_feature_selection_revision(mldr_dataset_train, mldr_dataset_test, costs, BUDGET)
+results
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
