@@ -380,7 +380,7 @@ CFSM <- function(X, Y, costs, budget){
   return(list(selection=selected_features, score=selected_scores, raw_Js=Js))
 }
 
-PROPOSED_1 <- function(X, Y, costs, budget, lambda){
+PROPOSED_CRITERION <- function(X, Y, costs, budget, lambda){
   X <- data.frame(X)
   Y <- data.frame(Y)
   k <- ncol(X)

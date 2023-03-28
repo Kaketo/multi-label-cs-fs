@@ -1,10 +1,9 @@
 ---
-title: "experiments"
+title: "Multi-label cost-constrained feature selection"
 output: html_notebook
 ---
 
-Load all necessary user-defined functions
-
+Load all necessary user-defined functions.
 ```{r echo = T, results = 'hide'}
 source("./src/utils.R")
 source("./src/selectors.R")
@@ -22,12 +21,13 @@ library(log4r)
 library(mldr.datasets)
 ```
 
+Set global parameters.
 ```{r}
 SEED = 0
 BUDGET = 20
 ```
 
-
+Load example dataset.
 ```{r}
 data = flags$dataset
 X_all = data %>% select(1:19) %>% mutate_if(is.character, as.factor)
@@ -50,35 +50,37 @@ costs = c(
 )
 ```
 
+Create mutli-label dataset in mldr library API.
 ```{r}
-costs
+target_idx = ncol(X_train) + seq(1, ncol(Y_train))
+mldr_dataset_train = mldr_from_dataframe(cbind(X_train, Y_train), target_idx)
+mldr_dataset_test = mldr_from_dataframe(cbind(X_test, Y_test), target_idx)
 ```
 
+Run selected feature selection algorithms.
 ```{r}
-target_idx <- ncol(X_train) + seq(1, ncol(Y_train))
-mldr_dataset_train <- mldr_from_dataframe(cbind(X_train, Y_train), target_idx)
-mldr_dataset_test <- mldr_from_dataframe(cbind(X_test, Y_test), target_idx)
+selection_STFS = STFS(X_train, Y_train, costs, BUDGET)
+selection_DCRMFS = DCRMFS(X_train, Y_train, costs, BUDGET)
+selection_AMI = AMI(X_train, Y_train, costs, BUDGET)
+selection_SCLS = SCLS(X_train, Y_train, costs, BUDGET)
+selection_MDMR = MDMR(X_train, Y_train, costs, BUDGET)
+selection_MVML = MVML(X_train, Y_train, costs, BUDGET)
+
+l_opt = lambda_optimal(X_train, Y_train, costs, BUDGET, l_cnt=5, l_max=NULL)
+selection_PROPOSED_CRITERION = PROPOSED_CRITERION(X_train, Y_train, costs, BUDGET, l_opt)
 ```
 
+Choose one feature selection algorithm result.
 ```{r}
-results_df <- data.frame(matrix(ncol = 29, nrow = 0))
-colnames(results_df) <- c(
-  "criterion", "lambda", "cost", "budget", 
-  "accuracy", "average.precision", "clp", "coverage", "F1", 
-  "hamming.loss", "macro.AUC", "macro.F1", "macro.precision", "macro.recall", 
-  "margin.loss", "micro.AUC", "micro.F1", "micro.precision", "micro.recall", "mlp", 
-  "one.error", "precision", "ranking.loss", "recall", "subset.accuracy", "wlp", "selection_type", 
-  "budget_pct", "k"
-)
+selected_features = selection_PROPOSED_CRITERION$selection
 ```
 
+Evaluate the results with selected model.
 ```{r}
-results <- score_final_feature_selection_revision(mldr_dataset_train, mldr_dataset_test, costs, BUDGET)
-results
+mldr_dataset_train_subset = create_subset(mldr_dataset_train, cols = selected_features)
+mldr_dataset_test_subset = create_subset(mldr_dataset_test, cols = selected_features)
+
+model <- br(mldr_dataset_train_subset, 'KNN', k=10)
+preds <- predict(model, mldr_dataset_test_subset)
+multilabel_evaluate(mldr_dataset_test_subset, preds)
 ```
-
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

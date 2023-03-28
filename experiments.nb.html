@@ -11,7 +11,7 @@
 
 
 
-<title>experiments</title>
+<title>Multi-label cost-constrained feature selection</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1752,19 +1752,19 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">experiments</h1>
+<h1 class="title toc-ignore">Multi-label cost-constrained feature
+selection</h1>
 
 </div>
 
 
 <!-- rnb-text-begin -->
-<p>Load all necessary user-defined functions</p>
+<p>Load all necessary user-defined functions.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc291cmNlKFwiLi9zcmMvdXRpbHMuUlwiKVxuc291cmNlKFwiLi9zcmMvc2VsZWN0b3JzLlJcIilcbnNvdXJjZShcIi4vc3JjL2RhdGFfZ2VuZXJhdGlvbi5SXCIpXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc291cmNlKFwiLi9zcmMvdXRpbHMuUlwiKVxuc291cmNlKFwiLi9zcmMvc2VsZWN0b3JzLlJcIilcbmBgYCJ9 -->
 <pre class="r"><code>source(&quot;./src/utils.R&quot;)
-source(&quot;./src/selectors.R&quot;)
-source(&quot;./src/data_generation.R&quot;)</code></pre>
+source(&quot;./src/selectors.R&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -1783,6 +1783,7 @@ library(mldr.datasets)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<p>Set global parameters.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuU0VFRCA9IDBcbkJVREdFVCA9IDIwXG5gYGAifQ== -->
@@ -1791,6 +1792,7 @@ BUDGET = 20</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<p>Load example dataset.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGF0YSA9IGZsYWdzJGRhdGFzZXRcblhfYWxsID0gZGF0YSAlPiUgc2VsZWN0KDE6MTkpICU+JSBtdXRhdGVfaWYoaXMuY2hhcmFjdGVyLCBhcy5mYWN0b3IpXG5ZX2FsbCA9IGRhdGEgJT4lIHNlbGVjdCgyMDoyNikgJT4lIG11dGF0ZV9pZihpcy5jaGFyYWN0ZXIsIGFzLmZhY3RvcilcblxuZGF0YV9zcGxpdGVkID0gdHJhaW5fdGVzdF9zcGxpdChYX2FsbCwgWV9hbGwsIHRlc3Rfc2l6ZSA9IDAuMSwgc2VlZD1TRUVEKVxuWF90cmFpbiA9IGRhdGFfc3BsaXRlZCRYX3RyYWluXG5ZX3RyYWluID0gZGF0YV9zcGxpdGVkJFlfdHJhaW5cblhfdGVzdCA9IGRhdGFfc3BsaXRlZCRYX3Rlc3RcbllfdGVzdCA9IGRhdGFfc3BsaXRlZCRZX3Rlc3RcblxuY29zdHMgPSBjKFxuICAxLDEsMSxcbiAgMiwyLDIsXG4gIDMsMywzLFxuICA0LDQsNCxcbiAgNSw1LDUsXG4gIDYsNiw2LFxuICA3XG4pXG5gYGAifQ== -->
@@ -1816,73 +1818,64 @@ costs = c(
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<p>Create mutli-label dataset in mldr library API.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY29zdHNcbmBgYCJ9 -->
-<pre class="r"><code>costs</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiIFsxXSAxIDEgMSAyIDIgMiAzIDMgMyA0IDQgNCA1IDUgNSA2IDYgNiA3XG4ifQ== -->
-<pre><code> [1] 1 1 1 2 2 2 3 3 3 4 4 4 5 5 5 6 6 6 7</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGFyZ2V0X2lkeCA8LSBuY29sKFhfdHJhaW4pICsgc2VxKDEsIG5jb2woWV90cmFpbikpXG5tbGRyX2RhdGFzZXRfdHJhaW4gPC0gbWxkcl9mcm9tX2RhdGFmcmFtZShjYmluZChYX3RyYWluLCBZX3RyYWluKSwgdGFyZ2V0X2lkeClcbm1sZHJfZGF0YXNldF90ZXN0IDwtIG1sZHJfZnJvbV9kYXRhZnJhbWUoY2JpbmQoWF90ZXN0LCBZX3Rlc3QpLCB0YXJnZXRfaWR4KVxuYGBgIn0= -->
-<pre class="r"><code>target_idx &lt;- ncol(X_train) + seq(1, ncol(Y_train))
-mldr_dataset_train &lt;- mldr_from_dataframe(cbind(X_train, Y_train), target_idx)
-mldr_dataset_test &lt;- mldr_from_dataframe(cbind(X_test, Y_test), target_idx)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGFyZ2V0X2lkeCA9IG5jb2woWF90cmFpbikgKyBzZXEoMSwgbmNvbChZX3RyYWluKSlcbm1sZHJfZGF0YXNldF90cmFpbiA9IG1sZHJfZnJvbV9kYXRhZnJhbWUoY2JpbmQoWF90cmFpbiwgWV90cmFpbiksIHRhcmdldF9pZHgpXG5tbGRyX2RhdGFzZXRfdGVzdCA9IG1sZHJfZnJvbV9kYXRhZnJhbWUoY2JpbmQoWF90ZXN0LCBZX3Rlc3QpLCB0YXJnZXRfaWR4KVxuYGBgIn0= -->
+<pre class="r"><code>target_idx = ncol(X_train) + seq(1, ncol(Y_train))
+mldr_dataset_train = mldr_from_dataframe(cbind(X_train, Y_train), target_idx)
+mldr_dataset_test = mldr_from_dataframe(cbind(X_test, Y_test), target_idx)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<p>Run selected feature selection algorithms.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmVzdWx0c19kZiA8LSBkYXRhLmZyYW1lKG1hdHJpeChuY29sID0gMjksIG5yb3cgPSAwKSlcbmNvbG5hbWVzKHJlc3VsdHNfZGYpIDwtIGMoXG4gIFwiY3JpdGVyaW9uXCIsIFwibGFtYmRhXCIsIFwiY29zdFwiLCBcImJ1ZGdldFwiLCBcbiAgXCJhY2N1cmFjeVwiLCBcImF2ZXJhZ2UucHJlY2lzaW9uXCIsIFwiY2xwXCIsIFwiY292ZXJhZ2VcIiwgXCJGMVwiLCBcbiAgXCJoYW1taW5nLmxvc3NcIiwgXCJtYWNyby5BVUNcIiwgXCJtYWNyby5GMVwiLCBcIm1hY3JvLnByZWNpc2lvblwiLCBcIm1hY3JvLnJlY2FsbFwiLCBcbiAgXCJtYXJnaW4ubG9zc1wiLCBcIm1pY3JvLkFVQ1wiLCBcIm1pY3JvLkYxXCIsIFwibWljcm8ucHJlY2lzaW9uXCIsIFwibWljcm8ucmVjYWxsXCIsIFwibWxwXCIsIFxuICBcIm9uZS5lcnJvclwiLCBcInByZWNpc2lvblwiLCBcInJhbmtpbmcubG9zc1wiLCBcInJlY2FsbFwiLCBcInN1YnNldC5hY2N1cmFjeVwiLCBcIndscFwiLCBcInNlbGVjdGlvbl90eXBlXCIsIFxuICBcImJ1ZGdldF9wY3RcIiwgXCJrXCJcbilcbmBgYCJ9 -->
-<pre class="r"><code>results_df &lt;- data.frame(matrix(ncol = 29, nrow = 0))
-colnames(results_df) &lt;- c(
-  &quot;criterion&quot;, &quot;lambda&quot;, &quot;cost&quot;, &quot;budget&quot;, 
-  &quot;accuracy&quot;, &quot;average.precision&quot;, &quot;clp&quot;, &quot;coverage&quot;, &quot;F1&quot;, 
-  &quot;hamming.loss&quot;, &quot;macro.AUC&quot;, &quot;macro.F1&quot;, &quot;macro.precision&quot;, &quot;macro.recall&quot;, 
-  &quot;margin.loss&quot;, &quot;micro.AUC&quot;, &quot;micro.F1&quot;, &quot;micro.precision&quot;, &quot;micro.recall&quot;, &quot;mlp&quot;, 
-  &quot;one.error&quot;, &quot;precision&quot;, &quot;ranking.loss&quot;, &quot;recall&quot;, &quot;subset.accuracy&quot;, &quot;wlp&quot;, &quot;selection_type&quot;, 
-  &quot;budget_pct&quot;, &quot;k&quot;
-)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmVzdWx0cyA8LSBzY29yZV9maW5hbF9mZWF0dXJlX3NlbGVjdGlvbl9yZXZpc2lvbihtbGRyX2RhdGFzZXRfdHJhaW4sIG1sZHJfZGF0YXNldF90ZXN0LCBjb3N0cywgQlVER0VUKVxuYGBgIn0= -->
-<pre class="r"><code>results &lt;- score_final_feature_selection_revision(mldr_dataset_train, mldr_dataset_test, costs, BUDGET)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiIC0gc2VsZWN0aW9uIHRpbWU6ICAwLjE3NTE2IHNlY29uZHNcIlxuWzFdIFwiIC0gc2NvcmluZyB0aW1lOiAgICAwLjE4ODg5IHNlY29uZHNcIlxuIn0= -->
-<pre><code>[1] &quot; - selection time:  0.17516 seconds&quot;
-[1] &quot; - scoring time:    0.18889 seconds&quot;</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmVzdWx0c1xuYGBgIn0= -->
-<pre class="r"><code>results</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbImRhdGEuZnJhbWUiXSwibnJvdyI6MiwibmNvbCI6MjcsInN1bW1hcnkiOnsiRGVzY3JpcHRpb24iOlsiZGYgWzIgw5cgMjddIl19fSwicmRmIjoiSDRzSUFBQUFBQUFBQm8xVlNXK2JRQlRHVzFxN2FaT3F4L3lHb05tWFk1VW90MTZ5U0xsVlkwd2RGQlpyd0UzejU5TStBbVB3R0V0RllwaDV5L2UrdHdDMzE0OTA4YmdJZ21BU1RNZWpZREtEYlRCN3VMKzVWQUZJNERBS3BzRzhmdjRCbzIrd3VZRDdITzV4cTVqZTNkL2N0ZnVUNjZ2YkgzQnlGa0V3L3d0WDc5bjNIR1BsZGdUNU9wQWMwNTJna0ZQQzI5TlhGRExGcE1BYU5TdjN6TUZBY2lLSTBrSVJUbUh0SzVCQUhITWxLY0pjZTU0ajFHMzJOUk1hdXZoVENpaUhJWVVnaUdFZzFxeXQ0aHdVd0VGeXJORDdldWhJRkplWXVWVjBDcnFuOGJuV3lURE5GUVJERkdPbFNEOUxxUkN2RTJSY1NuTG95UVZoaENKRnBCWmN5NTRDQzRFZ0VhQUtJRU9lVkJETUdIRFNqT0plWllHTDRBUWhwWkNHemd3VUNGTXRNV1VDUXphSTlpQWxzQ1JRSmN3b2RNd2ZOeEppM3UzcFVMZVZSRXBUcGdtdDgrb3BOSVU1Z05wSVJoajJQZXZlU01td3Bwd3BxaVR1Y1FXV25DcTNEaVRqR1hUSmFNeUJpSWE2TThFRzJpMmhWNEl4QktHMUVQaTQ0cjlIRXliRjFRZW15YzhTWGg3b2k2dmdyR1k0VUVKQ29QRzdTL2J3QmpvcENlMWZIYlE4cURFZ0lINk1PVUIxZzErdjlMaGkzL05UWmMwcXFaSWlOK21RYVA5VE5zdE5GcGN0eEVVcm5FYzJxV0lMOXE1UXFjbVdLK09JUjBWWk9jMXl1MXJIN3ZUUlJOSFdtdWpWa1RXL1kydldjYml4Y1pTVUhlQWtTamZPSnlvYUkvZU51M0dOUDMweVdaYms2ekF0eXRKUnkweGtpL0Q3dzVWemJ3UTdwN1BtN0FjOGJjUWdOZW11TEpteDZ5VGZoMDk4K01TRFQ0Ymhrd1A0U2JiTGNWN2tjUmhiVzFnbk9BQ3dKbi8yY2ozWmd6c3J0OHN5cmtLdnhKT1hYWlF2Wlp6R1VkM21uOVhySnZZNlBiZkZTK2k2L1Rsb2ZrbWo1cmsvRWxGcVNqY1NUcmhZbWNxRXZ5ejR3K25OYy9sUWJPcXc0RFN1ZjRzenozbGtQY0g1TnErWnJDNmpwMjMrZktucWI4R2lwUk8wOUZwcXUvMUZFM1BzL3B3elY2VTRoeWE2NlptbFpobTdrbjJCbE44emhuNGx1UnZTQlVqTHNDcXEzZnV4aUlyVVNkNlRDOTcrQVo4Y0Z0TU9DQUFBIn0= -->
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["criterion"],"name":[1],"type":["chr"],"align":["left"]},{"label":["lambda"],"name":[2],"type":["chr"],"align":["left"]},{"label":["cost"],"name":[3],"type":["chr"],"align":["left"]},{"label":["budget"],"name":[4],"type":["chr"],"align":["left"]},{"label":["accuracy"],"name":[5],"type":["chr"],"align":["left"]},{"label":["average.precision"],"name":[6],"type":["chr"],"align":["left"]},{"label":["clp"],"name":[7],"type":["chr"],"align":["left"]},{"label":["coverage"],"name":[8],"type":["chr"],"align":["left"]},{"label":["F1"],"name":[9],"type":["chr"],"align":["left"]},{"label":["hamming.loss"],"name":[10],"type":["chr"],"align":["left"]},{"label":["macro.AUC"],"name":[11],"type":["chr"],"align":["left"]},{"label":["macro.F1"],"name":[12],"type":["chr"],"align":["left"]},{"label":["macro.precision"],"name":[13],"type":["chr"],"align":["left"]},{"label":["macro.recall"],"name":[14],"type":["chr"],"align":["left"]},{"label":["margin.loss"],"name":[15],"type":["chr"],"align":["left"]},{"label":["micro.AUC"],"name":[16],"type":["chr"],"align":["left"]},{"label":["micro.F1"],"name":[17],"type":["chr"],"align":["left"]},{"label":["micro.precision"],"name":[18],"type":["chr"],"align":["left"]},{"label":["micro.recall"],"name":[19],"type":["chr"],"align":["left"]},{"label":["mlp"],"name":[20],"type":["chr"],"align":["left"]},{"label":["one.error"],"name":[21],"type":["chr"],"align":["left"]},{"label":["precision"],"name":[22],"type":["chr"],"align":["left"]},{"label":["ranking.loss"],"name":[23],"type":["chr"],"align":["left"]},{"label":["recall"],"name":[24],"type":["chr"],"align":["left"]},{"label":["subset.accuracy"],"name":[25],"type":["chr"],"align":["left"]},{"label":["wlp"],"name":[26],"type":["chr"],"align":["left"]},{"label":["selection_type"],"name":[27],"type":["chr"],"align":["left"]}],"data":[{"1":"STFS","2":"NA","3":"18","4":"20","5":"0.5325","6":"0.752628968253968","7":"0","8":"3.5","9":"0.662041847041847","10":"0.285714285714286","11":"0.749581840311882","12":"0.562423082796597","13":"0.536214485794318","14":"0.613971346114203","15":"2.15","16":"0.787089349236242","17":"0.67741935483871","18":"0.646153846153846","19":"0.711864406779661","20":"0","21":"0.3","22":"0.6525","23":"0.221666666666667","24":"0.723333333333333","25":"0.05","26":"0.142857142857143","27":"traditional"},{"1":"DCRMFS","2":"NA","3":"20","4":"20","5":"0.484761904761905","6":"0.750605158730159","7":"0","8":"3.75","9":"0.62537518037518","10":"0.328571428571429","11":"0.757805015945772","12":"0.516602047517572","13":"0.495652008809904","14":"0.574572253143682","15":"2.35","16":"0.793262188742415","17":"0.646153846153846","18":"0.591549295774648","19":"0.711864406779661","20":"0","21":"0.25","22":"0.595","23":"0.24","24":"0.715","25":"0","26":"0.142857142857143","27":"traditional"}],"options":{"columns":{"min":{},"max":[10],"total":[27]},"rows":{"min":[10],"max":[10],"total":[2]},"pages":{}}}
-  </script>
-</div>
-<!-- rnb-frame-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Add a new chunk by clicking the <em>Insert Chunk</em> button on the
-toolbar or by pressing <em>Ctrl+Alt+I</em>.</p>
-<p>When you save the notebook, an HTML file containing the code and
-output will be saved alongside it (click the <em>Preview</em> button or
-press <em>Ctrl+Shift+K</em> to preview the HTML file).</p>
-<p>The preview shows you a rendered HTML copy of the contents of the
-editor. Consequently, unlike <em>Knit</em>, <em>Preview</em> does not
-run any R code chunks. Instead, the output of the chunk when it was last
-run in the editor is displayed.</p>
-<!-- rnb-text-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2VsZWN0aW9uX1NURlMgPSBTVEZTKFhfdHJhaW4sIFlfdHJhaW4sIGNvc3RzLCBCVURHRVQpXG5zZWxlY3Rpb25fRENSTUZTID0gRENSTUZTKFhfdHJhaW4sIFlfdHJhaW4sIGNvc3RzLCBCVURHRVQpXG5zZWxlY3Rpb25fQU1JID0gQU1JKFhfdHJhaW4sIFlfdHJhaW4sIGNvc3RzLCBCVURHRVQpXG5zZWxlY3Rpb25fU0NMUyA9IFNDTFMoWF90cmFpbiwgWV90cmFpbiwgY29zdHMsIEJVREdFVClcbnNlbGVjdGlvbl9NRE1SID0gTURNUihYX3RyYWluLCBZX3RyYWluLCBjb3N0cywgQlVER0VUKVxuc2VsZWN0aW9uX01WTUwgPSBNVk1MKFhfdHJhaW4sIFlfdHJhaW4sIGNvc3RzLCBCVURHRVQpXG5cbmxfb3B0ID0gbGFtYmRhX29wdGltYWwoWF90cmFpbiwgWV90cmFpbiwgY29zdHMsIEJVREdFVCwgbF9jbnQ9NSwgbF9tYXg9TlVMTClcbnNlbGVjdGlvbl9QUk9QT1NFRF9DUklURVJJT04gPSBQUk9QT1NFRF9DUklURVJJT04oWF90cmFpbiwgWV90cmFpbiwgY29zdHMsIEJVREdFVCwgbF9vcHQpXG5gYGAifQ== -->
+<pre class="r"><code>selection_STFS = STFS(X_train, Y_train, costs, BUDGET)
+selection_DCRMFS = DCRMFS(X_train, Y_train, costs, BUDGET)
+selection_AMI = AMI(X_train, Y_train, costs, BUDGET)
+selection_SCLS = SCLS(X_train, Y_train, costs, BUDGET)
+selection_MDMR = MDMR(X_train, Y_train, costs, BUDGET)
+selection_MVML = MVML(X_train, Y_train, costs, BUDGET)
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogImV4cGVyaW1lbnRzIg0Kb3V0cHV0OiBodG1sX25vdGVib29rDQotLS0NCg0KTG9hZCBhbGwgbmVjZXNzYXJ5IHVzZXItZGVmaW5lZCBmdW5jdGlvbnMNCg0KYGBge3IgZWNobyA9IFQsIHJlc3VsdHMgPSAnaGlkZSd9DQpzb3VyY2UoIi4vc3JjL3V0aWxzLlIiKQ0Kc291cmNlKCIuL3NyYy9zZWxlY3RvcnMuUiIpDQpgYGANCg0KTG9hZCBhbGwgZXh0ZXJuYWwgbGlicmFyaWVzLg0KYGBge3IgZWNobyA9IFQsIHJlc3VsdHMgPSAnaGlkZSd9DQpsaWJyYXJ5KGpzb25saXRlKQ0KbGlicmFyeShwcm9ncmVzcykNCmxpYnJhcnkobHVicmlkYXRlKQ0KbGlicmFyeSh1dGltbCkNCmxpYnJhcnkoZHBseXIpDQpsaWJyYXJ5KGhhc2gpDQpsaWJyYXJ5KGxvZzRyKQ0KbGlicmFyeShtbGRyLmRhdGFzZXRzKQ0KYGBgDQoNCmBgYHtyfQ0KU0VFRCA9IDANCkJVREdFVCA9IDIwDQpgYGANCg0KDQpgYGB7cn0NCmRhdGEgPSBmbGFncyRkYXRhc2V0DQpYX2FsbCA9IGRhdGEgJT4lIHNlbGVjdCgxOjE5KSAlPiUgbXV0YXRlX2lmKGlzLmNoYXJhY3RlciwgYXMuZmFjdG9yKQ0KWV9hbGwgPSBkYXRhICU+JSBzZWxlY3QoMjA6MjYpICU+JSBtdXRhdGVfaWYoaXMuY2hhcmFjdGVyLCBhcy5mYWN0b3IpDQoNCmRhdGFfc3BsaXRlZCA9IHRyYWluX3Rlc3Rfc3BsaXQoWF9hbGwsIFlfYWxsLCB0ZXN0X3NpemUgPSAwLjEsIHNlZWQ9U0VFRCkNClhfdHJhaW4gPSBkYXRhX3NwbGl0ZWQkWF90cmFpbg0KWV90cmFpbiA9IGRhdGFfc3BsaXRlZCRZX3RyYWluDQpYX3Rlc3QgPSBkYXRhX3NwbGl0ZWQkWF90ZXN0DQpZX3Rlc3QgPSBkYXRhX3NwbGl0ZWQkWV90ZXN0DQoNCmNvc3RzID0gYygNCiAgMSwxLDEsDQogIDIsMiwyLA0KICAzLDMsMywNCiAgNCw0LDQsDQogIDUsNSw1LA0KICA2LDYsNiwNCiAgNw0KKQ0KYGBgDQoNCmBgYHtyfQ0KY29zdHMNCmBgYA0KDQpgYGB7cn0NCnRhcmdldF9pZHggPC0gbmNvbChYX3RyYWluKSArIHNlcSgxLCBuY29sKFlfdHJhaW4pKQ0KbWxkcl9kYXRhc2V0X3RyYWluIDwtIG1sZHJfZnJvbV9kYXRhZnJhbWUoY2JpbmQoWF90cmFpbiwgWV90cmFpbiksIHRhcmdldF9pZHgpDQptbGRyX2RhdGFzZXRfdGVzdCA8LSBtbGRyX2Zyb21fZGF0YWZyYW1lKGNiaW5kKFhfdGVzdCwgWV90ZXN0KSwgdGFyZ2V0X2lkeCkNCmBgYA0KDQpgYGB7cn0NCnJlc3VsdHNfZGYgPC0gZGF0YS5mcmFtZShtYXRyaXgobmNvbCA9IDI5LCBucm93ID0gMCkpDQpjb2xuYW1lcyhyZXN1bHRzX2RmKSA8LSBjKA0KICAiY3JpdGVyaW9uIiwgImxhbWJkYSIsICJjb3N0IiwgImJ1ZGdldCIsIA0KICAiYWNjdXJhY3kiLCAiYXZlcmFnZS5wcmVjaXNpb24iLCAiY2xwIiwgImNvdmVyYWdlIiwgIkYxIiwgDQogICJoYW1taW5nLmxvc3MiLCAibWFjcm8uQVVDIiwgIm1hY3JvLkYxIiwgIm1hY3JvLnByZWNpc2lvbiIsICJtYWNyby5yZWNhbGwiLCANCiAgIm1hcmdpbi5sb3NzIiwgIm1pY3JvLkFVQyIsICJtaWNyby5GMSIsICJtaWNyby5wcmVjaXNpb24iLCAibWljcm8ucmVjYWxsIiwgIm1scCIsIA0KICAib25lLmVycm9yIiwgInByZWNpc2lvbiIsICJyYW5raW5nLmxvc3MiLCAicmVjYWxsIiwgInN1YnNldC5hY2N1cmFjeSIsICJ3bHAiLCAic2VsZWN0aW9uX3R5cGUiLCANCiAgImJ1ZGdldF9wY3QiLCAiayINCikNCmBgYA0KDQpgYGB7cn0NCnJlc3VsdHMgPC0gc2NvcmVfZmluYWxfZmVhdHVyZV9zZWxlY3Rpb25fcmV2aXNpb24obWxkcl9kYXRhc2V0X3RyYWluLCBtbGRyX2RhdGFzZXRfdGVzdCwgY29zdHMsIEJVREdFVCkNCnJlc3VsdHMNCmBgYA0KDQpBZGQgYSBuZXcgY2h1bmsgYnkgY2xpY2tpbmcgdGhlICpJbnNlcnQgQ2h1bmsqIGJ1dHRvbiBvbiB0aGUgdG9vbGJhciBvciBieSBwcmVzc2luZyAqQ3RybCtBbHQrSSouDQoNCldoZW4geW91IHNhdmUgdGhlIG5vdGVib29rLCBhbiBIVE1MIGZpbGUgY29udGFpbmluZyB0aGUgY29kZSBhbmQgb3V0cHV0IHdpbGwgYmUgc2F2ZWQgYWxvbmdzaWRlIGl0IChjbGljayB0aGUgKlByZXZpZXcqIGJ1dHRvbiBvciBwcmVzcyAqQ3RybCtTaGlmdCtLKiB0byBwcmV2aWV3IHRoZSBIVE1MIGZpbGUpLg0KDQpUaGUgcHJldmlldyBzaG93cyB5b3UgYSByZW5kZXJlZCBIVE1MIGNvcHkgb2YgdGhlIGNvbnRlbnRzIG9mIHRoZSBlZGl0b3IuIENvbnNlcXVlbnRseSwgdW5saWtlICpLbml0KiwgKlByZXZpZXcqIGRvZXMgbm90IHJ1biBhbnkgUiBjb2RlIGNodW5rcy4gSW5zdGVhZCwgdGhlIG91dHB1dCBvZiB0aGUgY2h1bmsgd2hlbiBpdCB3YXMgbGFzdCBydW4gaW4gdGhlIGVkaXRvciBpcyBkaXNwbGF5ZWQuDQo=</div>
+l_opt = lambda_optimal(X_train, Y_train, costs, BUDGET, l_cnt=5, l_max=NULL)
+selection_PROPOSED_CRITERION = PROPOSED_CRITERION(X_train, Y_train, costs, BUDGET, l_opt)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Choose one feature selection algorithm result.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2VsZWN0ZWRfZmVhdHVyZXMgPSBzZWxlY3Rpb25fUFJPUE9TRURfQ1JJVEVSSU9OJHNlbGVjdGlvblxuYGBgIn0= -->
+<pre class="r"><code>selected_features = selection_PROPOSED_CRITERION$selection</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Evaluate the results with selected model.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubWxkcl9kYXRhc2V0X3RyYWluX3N1YnNldCA9IGNyZWF0ZV9zdWJzZXQobWxkcl9kYXRhc2V0X3RyYWluLCBjb2xzID0gc2VsZWN0ZWRfZmVhdHVyZXMpXG5tbGRyX2RhdGFzZXRfdGVzdF9zdWJzZXQgPSBjcmVhdGVfc3Vic2V0KG1sZHJfZGF0YXNldF90ZXN0LCBjb2xzID0gc2VsZWN0ZWRfZmVhdHVyZXMpXG5cbm1vZGVsIDwtIGJyKG1sZHJfZGF0YXNldF90cmFpbl9zdWJzZXQsICdLTk4nLCBrPTEwKVxucHJlZHMgPC0gcHJlZGljdChtb2RlbCwgbWxkcl9kYXRhc2V0X3Rlc3Rfc3Vic2V0KVxubXVsdGlsYWJlbF9ldmFsdWF0ZShtbGRyX2RhdGFzZXRfdGVzdF9zdWJzZXQsIHByZWRzKVxuYGBgIn0= -->
+<pre class="r"><code>mldr_dataset_train_subset = create_subset(mldr_dataset_train, cols = selected_features)
+mldr_dataset_test_subset = create_subset(mldr_dataset_test, cols = selected_features)
+
+model &lt;- br(mldr_dataset_train_subset, &#39;KNN&#39;, k=10)
+preds &lt;- predict(model, mldr_dataset_test_subset)
+multilabel_evaluate(mldr_dataset_test_subset, preds)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiICAgICAgICAgYWNjdXJhY3kgYXZlcmFnZS1wcmVjaXNpb24gICAgICAgICAgICAgICBjbHAgICAgICAgICAgY292ZXJhZ2UgICAgICAgICAgICAgICAgRjEgICAgICBoYW1taW5nLWxvc3MgICAgICAgICBtYWNyby1BVUMgXG4gICAgICAgIDAuNTQ3NTAwMCAgICAgICAgIDAuNzU4NTIxOCAgICAgICAgIDAuMDAwMDAwMCAgICAgICAgIDMuNjAwMDAwMCAgICAgICAgIDAuNjY5MDI2MCAgICAgICAgIDAuMjc4NTcxNCAgICAgICAgIDAuNzQzOTc1MiBcbiAgICAgICAgIG1hY3JvLUYxICAgbWFjcm8tcHJlY2lzaW9uICAgICAgbWFjcm8tcmVjYWxsICAgICAgIG1hcmdpbi1sb3NzICAgICAgICAgbWljcm8tQVVDICAgICAgICAgIG1pY3JvLUYxICAgbWljcm8tcHJlY2lzaW9uIFxuICAgICAgICAwLjU3MDM2OTcgICAgICAgICAwLjUyODA1OTAgICAgICAgICAwLjYzOTk0NTQgICAgICAgICAyLjI1MDAwMDAgICAgICAgICAwLjgwMzQxMDggICAgICAgICAwLjY5MjkxMzQgICAgICAgICAwLjY0NzA1ODggXG4gICAgIG1pY3JvLXJlY2FsbCAgICAgICAgICAgICAgIG1scCAgICAgICAgIG9uZS1lcnJvciAgICAgICAgIHByZWNpc2lvbiAgICAgIHJhbmtpbmctbG9zcyAgICAgICAgICAgIHJlY2FsbCAgIHN1YnNldC1hY2N1cmFjeSBcbiAgICAgICAgMC43NDU3NjI3ICAgICAgICAgMC4xNDI4NTcxICAgICAgICAgMC4zNTAwMDAwICAgICAgICAgMC42MzgzMzMzICAgICAgICAgMC4yMzAwMDAwICAgICAgICAgMC43NDgzMzMzICAgICAgICAgMC4wNTAwMDAwIFxuICAgICAgICAgICAgICB3bHAgXG4gICAgICAgIDAuMTQyODU3MSBcbiJ9 -->
+<pre><code>         accuracy average-precision               clp          coverage                F1      hamming-loss         macro-AUC 
+        0.5475000         0.7585218         0.0000000         3.6000000         0.6690260         0.2785714         0.7439752 
+         macro-F1   macro-precision      macro-recall       margin-loss         micro-AUC          micro-F1   micro-precision 
+        0.5703697         0.5280590         0.6399454         2.2500000         0.8034108         0.6929134         0.6470588 
+     micro-recall               mlp         one-error         precision      ranking-loss            recall   subset-accuracy 
+        0.7457627         0.1428571         0.3500000         0.6383333         0.2300000         0.7483333         0.0500000 
+              wlp 
+        0.1428571 </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIk11bHRpLWxhYmVsIGNvc3QtY29uc3RyYWluZWQgZmVhdHVyZSBzZWxlY3Rpb24iDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpMb2FkIGFsbCBuZWNlc3NhcnkgdXNlci1kZWZpbmVkIGZ1bmN0aW9ucy4NCmBgYHtyIGVjaG8gPSBULCByZXN1bHRzID0gJ2hpZGUnfQ0Kc291cmNlKCIuL3NyYy91dGlscy5SIikNCnNvdXJjZSgiLi9zcmMvc2VsZWN0b3JzLlIiKQ0KYGBgDQoNCkxvYWQgYWxsIGV4dGVybmFsIGxpYnJhcmllcy4NCmBgYHtyIGVjaG8gPSBULCByZXN1bHRzID0gJ2hpZGUnfQ0KbGlicmFyeShqc29ubGl0ZSkNCmxpYnJhcnkocHJvZ3Jlc3MpDQpsaWJyYXJ5KGx1YnJpZGF0ZSkNCmxpYnJhcnkodXRpbWwpDQpsaWJyYXJ5KGRwbHlyKQ0KbGlicmFyeShoYXNoKQ0KbGlicmFyeShsb2c0cikNCmxpYnJhcnkobWxkci5kYXRhc2V0cykNCmBgYA0KDQpTZXQgZ2xvYmFsIHBhcmFtZXRlcnMuDQpgYGB7cn0NClNFRUQgPSAwDQpCVURHRVQgPSAyMA0KYGBgDQoNCkxvYWQgZXhhbXBsZSBkYXRhc2V0Lg0KYGBge3J9DQpkYXRhID0gZmxhZ3MkZGF0YXNldA0KWF9hbGwgPSBkYXRhICU+JSBzZWxlY3QoMToxOSkgJT4lIG11dGF0ZV9pZihpcy5jaGFyYWN0ZXIsIGFzLmZhY3RvcikNCllfYWxsID0gZGF0YSAlPiUgc2VsZWN0KDIwOjI2KSAlPiUgbXV0YXRlX2lmKGlzLmNoYXJhY3RlciwgYXMuZmFjdG9yKQ0KDQpkYXRhX3NwbGl0ZWQgPSB0cmFpbl90ZXN0X3NwbGl0KFhfYWxsLCBZX2FsbCwgdGVzdF9zaXplID0gMC4xLCBzZWVkPVNFRUQpDQpYX3RyYWluID0gZGF0YV9zcGxpdGVkJFhfdHJhaW4NCllfdHJhaW4gPSBkYXRhX3NwbGl0ZWQkWV90cmFpbg0KWF90ZXN0ID0gZGF0YV9zcGxpdGVkJFhfdGVzdA0KWV90ZXN0ID0gZGF0YV9zcGxpdGVkJFlfdGVzdA0KDQpjb3N0cyA9IGMoDQogIDEsMSwxLA0KICAyLDIsMiwNCiAgMywzLDMsDQogIDQsNCw0LA0KICA1LDUsNSwNCiAgNiw2LDYsDQogIDcNCikNCmBgYA0KDQpDcmVhdGUgbXV0bGktbGFiZWwgZGF0YXNldCBpbiBtbGRyIGxpYnJhcnkgQVBJLg0KYGBge3J9DQp0YXJnZXRfaWR4ID0gbmNvbChYX3RyYWluKSArIHNlcSgxLCBuY29sKFlfdHJhaW4pKQ0KbWxkcl9kYXRhc2V0X3RyYWluID0gbWxkcl9mcm9tX2RhdGFmcmFtZShjYmluZChYX3RyYWluLCBZX3RyYWluKSwgdGFyZ2V0X2lkeCkNCm1sZHJfZGF0YXNldF90ZXN0ID0gbWxkcl9mcm9tX2RhdGFmcmFtZShjYmluZChYX3Rlc3QsIFlfdGVzdCksIHRhcmdldF9pZHgpDQpgYGANCg0KUnVuIHNlbGVjdGVkIGZlYXR1cmUgc2VsZWN0aW9uIGFsZ29yaXRobXMuDQpgYGB7cn0NCnNlbGVjdGlvbl9TVEZTID0gU1RGUyhYX3RyYWluLCBZX3RyYWluLCBjb3N0cywgQlVER0VUKQ0Kc2VsZWN0aW9uX0RDUk1GUyA9IERDUk1GUyhYX3RyYWluLCBZX3RyYWluLCBjb3N0cywgQlVER0VUKQ0Kc2VsZWN0aW9uX0FNSSA9IEFNSShYX3RyYWluLCBZX3RyYWluLCBjb3N0cywgQlVER0VUKQ0Kc2VsZWN0aW9uX1NDTFMgPSBTQ0xTKFhfdHJhaW4sIFlfdHJhaW4sIGNvc3RzLCBCVURHRVQpDQpzZWxlY3Rpb25fTURNUiA9IE1ETVIoWF90cmFpbiwgWV90cmFpbiwgY29zdHMsIEJVREdFVCkNCnNlbGVjdGlvbl9NVk1MID0gTVZNTChYX3RyYWluLCBZX3RyYWluLCBjb3N0cywgQlVER0VUKQ0KDQpsX29wdCA9IGxhbWJkYV9vcHRpbWFsKFhfdHJhaW4sIFlfdHJhaW4sIGNvc3RzLCBCVURHRVQsIGxfY250PTUsIGxfbWF4PU5VTEwpDQpzZWxlY3Rpb25fUFJPUE9TRURfQ1JJVEVSSU9OID0gUFJPUE9TRURfQ1JJVEVSSU9OKFhfdHJhaW4sIFlfdHJhaW4sIGNvc3RzLCBCVURHRVQsIGxfb3B0KQ0KYGBgDQoNCkNob29zZSBvbmUgZmVhdHVyZSBzZWxlY3Rpb24gYWxnb3JpdGhtIHJlc3VsdC4NCmBgYHtyfQ0Kc2VsZWN0ZWRfZmVhdHVyZXMgPSBzZWxlY3Rpb25fUFJPUE9TRURfQ1JJVEVSSU9OJHNlbGVjdGlvbg0KYGBgDQoNCkV2YWx1YXRlIHRoZSByZXN1bHRzIHdpdGggc2VsZWN0ZWQgbW9kZWwuDQpgYGB7cn0NCm1sZHJfZGF0YXNldF90cmFpbl9zdWJzZXQgPSBjcmVhdGVfc3Vic2V0KG1sZHJfZGF0YXNldF90cmFpbiwgY29scyA9IHNlbGVjdGVkX2ZlYXR1cmVzKQ0KbWxkcl9kYXRhc2V0X3Rlc3Rfc3Vic2V0ID0gY3JlYXRlX3N1YnNldChtbGRyX2RhdGFzZXRfdGVzdCwgY29scyA9IHNlbGVjdGVkX2ZlYXR1cmVzKQ0KDQptb2RlbCA8LSBicihtbGRyX2RhdGFzZXRfdHJhaW5fc3Vic2V0LCAnS05OJywgaz0xMCkNCnByZWRzIDwtIHByZWRpY3QobW9kZWwsIG1sZHJfZGF0YXNldF90ZXN0X3N1YnNldCkNCm11bHRpbGFiZWxfZXZhbHVhdGUobWxkcl9kYXRhc2V0X3Rlc3Rfc3Vic2V0LCBwcmVkcykNCmBgYA0K</div>
 
 
 
